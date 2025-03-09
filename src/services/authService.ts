@@ -1,21 +1,24 @@
-import jwt from "jsonwebtoken";
-import { UserModel } from "../models/userModel";
+import axios from "axios";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const SECRET = process.env.JWT_SECRET || "supersecretkey";
+const AUTH0_TOKEN_URL = `https://${process.env.AUTH0_DOMAIN}/oauth/token`;
 
-export const AuthService = {
-  async login(email: string, name: string) {
-    let user = await UserModel.findUserByEmail(email);
-
-    if (!user) {
-      user = await UserModel.createUser({ email, name, role: "user" });
+export class AuthService {
+  static async exchangeCodeForToken(code: string) {
+    try {
+      const response = await axios.post(AUTH0_TOKEN_URL, {
+        grant_type: "authorization_code",
+        client_id: process.env.AUTH0_CLIENT_ID,
+        client_secret: process.env.AUTH0_CLIENT_SECRET,
+        code,
+        redirect_uri: process.env.AUTH0_CALLBACK_URL,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Auth0 Token Exchange Error:", error.response?.data);
+      throw new Error("Failed to exchange code for token.");
     }
-
-    const token = jwt.sign({ email: user.email, role: user.role }, SECRET, { expiresIn: "1h" });
-
-    return { token, user };
-  },
-};
+  }
+}

@@ -1,8 +1,10 @@
 import express from "express";
-import { AuthController } from "../controllers/authController";
+import { login, callback, logout } from "../controllers/authController";
 
 const router = express.Router();
 
-router.post("/login", AuthController.login);
+router.get("/login", login);
+router.get("/callback", callback);
+router.get("/logout", logout);
 
 export default router;
